@@ -27,6 +27,14 @@ class PyTest(TestCommand):
         errno = pytest.main(self.pytest_args)
         sys.exit(errno)
 
+def parse_requirements_file(file_name):
+    with pathlib.Path(os.path.join(here, file_name)).open() as requirements_txt:
+        install_requires = [
+            str(requirement)
+            for requirement
+            in pkg_resources.parse_requirements(requirements_txt)
+        ]
+    return install_requires
 
 setup(
     name=MODULE_NAME,
@@ -38,17 +46,12 @@ setup(
     long_description_content_type="text/markdown",
     url=about["__url__"],
     packages=find_packages(),
-    install_requires=[
-        "Click==7.0",
-        "tinydb==3.15.2",
-        "pylint==2.4.4",
-    ],
-    tests_require=["pytest", "pytest_mock"],
+    install_requires=parse_requirements_file("requirements.txt"),
+    tests_require=parse_requirements_file("requirements-test.txt"),
     extras_require={
-        'dev': [
-            'pyinstaller'
-        ]
+        'dev': parse_requirements_file("requirements-dev.txt")
     },
     cmdclass={"test": PyTest},
+    data_files=[("", ["requirements.txt", "requirements-test.txt", "requirements-dev.txt"])],
     scripts=["./bin/package_name_cli"],
 )
